@@ -1,0 +1,53 @@
+@startuml
+[*] --> Bootstrap.Start
+
+state Bootstrap #darkgoldenrod {
+    state Start #goldenrod : Start GUI
+    state CamConnect #goldenrod : Connect to cameras
+    state Connected #goldenrod : Show Connected on GUI
+    state FindBasket #goldenrod : find basket Algorithm
+    state ready #goldenrod : ready to play
+    Start -down-> CamConnect
+    CamConnect -down-> Connected
+    Connected -down-> FindBasket
+    FindBasket -down-> ready
+    ready -down-> ready : Change Number of Players
+    ready -down-> Game.PromptPlayer : Press Start
+}
+
+state Game #DodgerBlue {
+    state PromptPlayer #DeepSkyBlue : Ask Player to throw on GUI
+    PromptPlayer -right-> SearchBall.BallNotFound : If we are not tracking
+    PromptPlayer -left-> RecognizeThrow.ThrowNotFound : If we are tracking
+}
+
+state SearchBall #magenta {
+    state BallNotFound #Red : Search Ball Algorithm
+    BallNotFound : Show Ball Not Found on GUI
+    state BallFound #GreenYellow : Show Ball Found on GUI
+    BallNotFound -down-> BallFound
+    BallFound -left-> RecognizeThrow.ThrowNotFound
+}
+
+state RecognizeThrow #magenta {
+    state ThrowNotFound #Red : Recognize Throw Algorithm
+    state ThrowFound #GreenYellow : save throw location for score
+    ThrowNotFound -down-> ThrowFound
+    ThrowNotFound -right-> SearchBall.BallNotFound : lost ball
+    ThrowFound -down-> IsScore.IsScoreFound
+}
+
+state IsScore #magenta {
+    state IsScoreFound #BlueViolet : Recognize Score Algorithm
+    state ScoreFound #GreenYellow : update score and show on GUI
+    state ScoreNotFound #Red : show on GUI
+    IsScoreFound -down-> ScoreFound : Scored
+    IsScoreFound -down-> ScoreNotFound : not Scored
+    ScoreFound -up-> PromptPlayer
+    ScoreNotFound -up-> PromptPlayer
+}
+
+Game.PromptPlayer -> [*] : press Exit
+
+
+@enduml
