@@ -9,13 +9,19 @@ CAMERA_CONNECTED = 1
 CAMERA_DISCONNECTED = 2
 BASKET_FOUND = 3
 BASKET_NOT_FOUND = 4
-Stream_url = "http://192.168.1.133:4747/video"
+Stream_url1 = "http://10.100.102.13:4747/video"
+Stream_url2 = "http://10.100.102.17:4747/video"
+#Stream_url = "http://192.168.1.133:4747/video"
 
 #Global Variables
 gui = None
 imgProc = None
+start_gui_ready_event = threading.Event()
+game_gui_ready_event = threading.Event()
+
 
 def FinishBootstrap():
+    start_gui_ready_event.wait()
     if imgProc.CamConnect() == FAIL:
         print("Camera could not be connected.")
         Exit()
@@ -26,8 +32,18 @@ def FinishBootstrap():
     gui.updateBootStrapWindow(BASKET_FOUND)
     return
 
+def GameLoop():
+    game_gui_ready_event.wait()
+    while True :
+        imgProc.SearchBall() #returns only after we have a ball... still don't know what this function returns
+        imgProc.RecognizeThrow() #returns only after we have found a throw... still don't know what this function returns
+        gui.UpdateScore(imgProc.IsScoreFound()) #returns 0 if no score, and the score if do score
+        gui.updateGameWindow(0) #moving to the next player
+
 def PromptPlayer():
-    print("TODO Prompt Player")
+    bg_thread = threading.Thread(target=GameLoop, daemon=True)
+    bg_thread.start()
+    gui.CreateGameWindow()
     return
 
 def Exit():
@@ -43,8 +59,8 @@ def Bootstrap():
 def main():
     global gui
     global imgProc
-    imgProc = ImgProcHandler(Stream_url)
-    gui = GuiHandler(PromptPlayer, Exit)
+    imgProc = ImgProcHandler(Stream_url1,Stream_url2)
+    gui = GuiHandler(PromptPlayer, Exit, start_gui_ready_event, game_gui_ready_event)
     Bootstrap()
 
 if __name__ == "__main__":
