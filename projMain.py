@@ -1,17 +1,8 @@
+from sys import exit
 import threading
+from Constants import *
 from GUIHandler import GuiHandler
 from ImgProcHandler import ImgProcHandler
-
-#Defines
-SUCCESS = 1
-FAIL = 0
-CAMERA_CONNECTED = 1
-CAMERA_DISCONNECTED = 2
-BASKET_FOUND = 3
-BASKET_NOT_FOUND = 4
-Stream_url1 = "http://10.100.102.13:4747/video"
-Stream_url2 = "http://10.100.102.17:4747/video"
-#Stream_url = "http://192.168.1.133:4747/video"
 
 #Global Variables
 gui = None
@@ -49,6 +40,7 @@ def PromptPlayer():
 def Exit():
     gui.Exit()
     imgProc.Exit()
+    exit()
     return
 
 def Bootstrap():
@@ -59,7 +51,7 @@ def Bootstrap():
 def main():
     global gui
     global imgProc
-    imgProc = ImgProcHandler(Stream_url1,Stream_url2)
+    imgProc = ImgProcHandler()
     gui = GuiHandler(PromptPlayer, Exit, start_gui_ready_event, game_gui_ready_event)
     Bootstrap()
 
