@@ -6,11 +6,16 @@ class ImgProcHandler:
     def __init__(self):
         self.cap_front = None
         self.cap_side = None
+        self.basket_color_range = (np.array([BASKET_LOW_H, BASKET_LOW_S, BASKET_LOW_V]), np.array([BASKET_HIGH_H, BASKET_HIGH_S, BASKET_HIGH_V]))
         self.ball_red_range1 = (np.array([BALL_RED1_LOW_H, BALL_RED1_LOW_S, BALL_RED1_LOW_V]), np.array([BALL_RED1_HIGH_H, BALL_RED1_HIGH_S, BALL_RED1_HIGH_V]))
         self.ball_red_range2 = (np.array([BALL_RED2_LOW_H, BALL_RED2_LOW_S, BALL_RED2_LOW_V]), np.array([BALL_RED2_HIGH_H, BALL_RED2_HIGH_S, BALL_RED2_HIGH_V]))
         self.ball_blue_range = (np.array([BALL_BLUE_LOW_H, BALL_BLUE_LOW_S, BALL_BLUE_LOW_V]), np.array([BALL_BLUE_HIGH_H, BALL_BLUE_HIGH_S, BALL_BLUE_HIGH_V]))
+        self.basket_hight = 0
+        self.basket_width = 0
+        self.basket_center = None
 
     def SearchBall(self):
+        return
         foundBall = FAIL
         # Read a frame from the front camera
         while (foundBall == FAIL):
@@ -51,8 +56,34 @@ class ImgProcHandler:
         return
 
     def FindBasket(self):
-        print("TODO Find Basket")
+        image_path = "../Basket1.jpeg"  # Change to your image path
+        image = cv2.imread(image_path)
+        if image is None:
+           print("Error: Image not found!")
+           return FAIL
+        else:
+            # Resize image
+            h, w = image.shape[:2]
+            new_width = 1200  # Set a new width
+            new_height = int(h * (new_width / w))  # Scale height proportionally
+            resized_image = cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_AREA)
+            # Filter colors
+            filtered_image = self.filter_colors(resized_image, [self.basket_color_range])
+            #find the basket properties
+            self.basket_hight, self.basket_width, self.basket_center = self.FindBoundingBoxToLargestObject(filtered_image)
+            if self.basket_hight == 0:
+                return FAIL
+
+            # Display the result
+            cv2.imshow("Image", filtered_image)
+            cv2.waitKey(0)
         return SUCCESS
+
+
+
+
+
+
 
     def CamConnect(self):
         if Stream_url_front is not None:
@@ -127,4 +158,38 @@ class ImgProcHandler:
                         (center[0] + 10, center[1] - 10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
             return center
+
         return None
+
+    def FindBoundingBoxToLargestObject(self, image):
+        # Convert to grayscale for contour detection
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+        # Find contours
+        contours, _ = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        if not contours:
+            print("No basket detected!")
+            return 0 ,0 ,0
+
+        # Find the largest contour (assumed to be the basket)
+        largest_contour = max(contours, key=cv2.contourArea)
+
+        # Get the bounding rectangle
+        x, y, w, h = cv2.boundingRect(largest_contour)
+
+        center = (x + w // 2, y + h // 2)
+
+        # Draw the bounding rectangle and center point (for visualization)
+        cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        cv2.circle(image, center, 5, (0, 0, 255), -1)
+
+        # Add text with measurements
+        cv2.putText(image, f"Width: {w}", (x, y - 30),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+        cv2.putText(image, f"Height: {h}", (x, y - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+        cv2.putText(image, f"Center: {center}", (x, y + h + 25),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+
+        return h , w, center
