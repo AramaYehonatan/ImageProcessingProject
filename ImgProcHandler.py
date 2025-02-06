@@ -7,45 +7,43 @@ class ImgProcHandler:
         self.cap_front = None
         self.cap_side = None
         self.basket_color_range = (np.array([BASKET_LOW_H, BASKET_LOW_S, BASKET_LOW_V]), np.array([BASKET_HIGH_H, BASKET_HIGH_S, BASKET_HIGH_V]))
-        self.ball_red_range1 = (np.array([BALL_RED1_LOW_H, BALL_RED1_LOW_S, BALL_RED1_LOW_V]), np.array([BALL_RED1_HIGH_H, BALL_RED1_HIGH_S, BALL_RED1_HIGH_V]))
-        self.ball_red_range2 = (np.array([BALL_RED2_LOW_H, BALL_RED2_LOW_S, BALL_RED2_LOW_V]), np.array([BALL_RED2_HIGH_H, BALL_RED2_HIGH_S, BALL_RED2_HIGH_V]))
-        self.ball_blue_range = (np.array([BALL_BLUE_LOW_H, BALL_BLUE_LOW_S, BALL_BLUE_LOW_V]), np.array([BALL_BLUE_HIGH_H, BALL_BLUE_HIGH_S, BALL_BLUE_HIGH_V]))
+        self.blue_ball_color_range = (np.array([BLUE_BALL_LOW_H, BLUE_BALL_LOW_S, BLUE_BALL_LOW_V]), np.array([BLUE_BALL_HIGH_H, BLUE_BALL_HIGH_S, BLUE_BALL_HIGH_V]))
+        self.yellow_ball_color_range = (np.array([YELLOW_BALL_LOW_H, YELLOW_BALL_LOW_S, YELLOW_BALL_LOW_V]), np.array([YELLOW_BALL_HIGH_H, YELLOW_BALL_HIGH_S, YELLOW_BALL_HIGH_V]))
         self.basket_hight = 0
         self.basket_width = 0
         self.basket_center = None
 
     def SearchBall(self):
-        return
         foundBall = FAIL
-        # Read a frame from the front camera
-        while (foundBall == FAIL):
-            ret, frame = self.cap_front.read()
-            if not ret:
-                print("Failed to capture frame from front camera.")
-                continue
-            else:
-                h, w = frame.shape[:2]
-                new_width = 1200  # Set a new width
-                new_height = int(h * (new_width / w))  # Scale height proportionally
-                resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
-                filtered_frame = self.filter_colors(resized_frame, [self.ball_red_range1, self.ball_red_range2, self.ball_blue_range])
-                center = self.find_ball_center(filtered_frame)
-                cv2.imshow("Image", filtered_frame)
-                cv2.waitKey(1)
-        #image_path = "../BigBall.jpg"  # Change to your image path
-        #image = cv2.imread(image_path)
-        #if image is None:
-        #    print("Error: Image not found!")
-        #else:
-        #    h, w = image.shape[:2]
-        #    new_width = 1200  # Set a new width
-        #    new_height = int(h * (new_width / w))  # Scale height proportionally
-        #    resized_image = cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_AREA)
-        #    filtered_image = self.filter_colors(resized_image, [self.ball_red_range1, self.ball_red_range2, self.ball_blue_range])
-        #    center = self.find_ball_center(filtered_image)
-        #    cv2.imshow("Image", filtered_image)
-        #    cv2.waitKey(0)
-        #return
+        # # Read a frame from the front camera
+        # while (foundBall == FAIL):
+        #     ret, frame = self.cap_front.read()
+        #     if not ret:
+        #         print("Failed to capture frame from front camera.")
+        #         continue
+        #     else:
+        #         h, w = frame.shape[:2]
+        #         new_width = 1200  # Set a new width
+        #         new_height = int(h * (new_width / w))  # Scale height proportionally
+        #         resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
+        #         filtered_frame = self.filter_colors(resized_frame, [self.blue_ball_color_range, self.yellow_ball_color_range])
+        #         center = self.find_ball_center(filtered_frame)
+        #         cv2.imshow("Image", filtered_frame)
+        #         cv2.waitKey(1)
+        image_path = "../Balls6.jpeg"  # Change to your image path
+        image = cv2.imread(image_path)
+        if image is None:
+           print("Error: Image not found!")
+        else:
+           h, w = image.shape[:2]
+           new_width = 1200  # Set a new width
+           new_height = int(h * (new_width / w))  # Scale height proportionally
+           resized_image = cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_AREA)
+           filtered_image = self.filter_colors(resized_image, [self.blue_ball_color_range, self.yellow_ball_color_range])
+           center = self.find_ball_center(filtered_image)
+           cv2.imshow("Image", filtered_image)
+           cv2.waitKey(0)
+        return
 
     def RecognizeThrow(self):
         print("TODO Recognize Throw")
@@ -56,26 +54,31 @@ class ImgProcHandler:
         return
 
     def FindBasket(self):
-        image_path = "../Basket1.jpeg"  # Change to your image path
-        image = cv2.imread(image_path)
-        if image is None:
-           print("Error: Image not found!")
-           return FAIL
+        return SUCCESS
+        ret, frame = self.cap_front.read()
+        if not ret:
+            print("Failed to capture frame from front camera.")
+            return FAIL
+        # image_path = "../Basket1.jpeg"  # Change to your image path
+        # image = cv2.imread(image_path)
+        # if image is None:
+        #   print("Error: Image not found!")
+        #   return FAIL
         else:
             # Resize image
-            h, w = image.shape[:2]
+            h, w = frame.shape[:2]
             new_width = 1200  # Set a new width
             new_height = int(h * (new_width / w))  # Scale height proportionally
-            resized_image = cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_AREA)
+            resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
             # Filter colors
-            filtered_image = self.filter_colors(resized_image, [self.basket_color_range])
+            filtered_frame = self.filter_colors(resized_frame, [self.basket_color_range])
             #find the basket properties
-            self.basket_hight, self.basket_width, self.basket_center = self.FindBoundingBoxToLargestObject(filtered_image)
+            self.basket_hight, self.basket_width, self.basket_center = self.FindBoundingBoxToLargestObject(filtered_frame)
             if self.basket_hight == 0:
                 return FAIL
 
             # Display the result
-            cv2.imshow("Image", filtered_image)
+            cv2.imshow("Image", filtered_frame)
             cv2.waitKey(0)
         return SUCCESS
 
@@ -180,16 +183,16 @@ class ImgProcHandler:
 
         center = (x + w // 2, y + h // 2)
 
-        # Draw the bounding rectangle and center point (for visualization)
-        cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        cv2.circle(image, center, 5, (0, 0, 255), -1)
-
-        # Add text with measurements
-        cv2.putText(image, f"Width: {w}", (x, y - 30),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-        cv2.putText(image, f"Height: {h}", (x, y - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-        cv2.putText(image, f"Center: {center}", (x, y + h + 25),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+        # # Draw the bounding rectangle and center point (for visualization)
+        # cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        # cv2.circle(image, center, 5, (0, 0, 255), -1)
+        #
+        # # Add text with measurements
+        # cv2.putText(image, f"Width: {w}", (x, y - 30),
+        #             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+        # cv2.putText(image, f"Height: {h}", (x, y - 10),
+        #             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+        # cv2.putText(image, f"Center: {center}", (x, y + h + 25),
+        #             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
         return h , w, center

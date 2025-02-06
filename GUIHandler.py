@@ -137,7 +137,7 @@ class GuiHandler:
 
 
     def UpdateScore(self, score):
-        self.player_score[self.current_player - 1] += score
+        #self.player_score[self.current_player - 1] += score
         self.updateGameWindow(self.current_player)
 
     def Exit(self):
